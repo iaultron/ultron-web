@@ -1461,5 +1461,61 @@ function pularLogin() {
   const iframe = document.getElementById("iframeLogin");
   if (iframe) iframe.remove();
 }
-</script></body>
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBxxIIKYlyFaDscv-EjGBqUmflCzUPk5j4",
+  authDomain: "ultronapp.firebaseapp.com",
+  projectId: "ultronapp",
+  storageBucket: "ultronapp.firebasestorage.app",
+  messagingSenderId: "981467279909",
+  appId: "1:981467279909:web:e5d55db93d16c544e0c5cc"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let conhecimentoUltron = {};
+
+async function carregarConhecimento() {
+  const ref = doc(db, "ultron", "conhecimento");
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    conhecimentoUltron = snap.data();
+  }
+}
+
+async function salvarConhecimentoFirebase(pergunta, resposta) {
+  const ref = doc(db, "ultron", "conhecimento");
+  conhecimentoUltron[pergunta] = resposta;
+  await setDoc(ref, conhecimentoUltron);
+}
+
+function responderUltron(msg) {
+  const texto = msg.trim().toLowerCase();
+  if (conhecimentoUltron[texto]) {
+    return conhecimentoUltron[texto];
+  }
+
+  const regex = /quando eu disser ['"](.*?)['"],? você responde ['"](.*?)['"]/i;
+  const match = texto.match(regex);
+  if (match) {
+    const pergunta = match[1].trim().toLowerCase();
+    const resposta = match[2].trim();
+    salvarConhecimentoFirebase(pergunta, resposta);
+    return `Entendido! Quando você disser "${pergunta}", responderei "${resposta}".`;
+  }
+
+  return "Ainda não sei como responder isso. Que tal me ensinar?";
+}
+
+async function initUltron() {
+  await carregarConhecimento();
+}
+initUltron();
+</script>
+</body>
 </html>
