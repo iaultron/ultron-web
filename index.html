@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ultron</title>
+<link href="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+    :root {
+      --bg: #ffffff;
+      --text: #1e1e1e;
+      --bot: #f0f0f0;
+      --user: #f0f0f0;
+      --border: #dddddd;
+      --neutral: #999;
+      --muted: #aaa;
+    }
+    body.dark {
+      --bg: #121212;
+      --text: #e0e0e0;
+      --bot: #1e1e1e;
+      --user: #1a1a1a;
+      --border: #2a2a2a;
+      --neutral: #bbb;
+    }
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: "Inter", sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+
+.sidebar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: 340px;
+  background-color: var(--bot);
+  padding: 30px 20px;
+  display: none;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-right: 1px solid var(--border);
+  z-index: 10;
+  box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+}
+
+
+    .sidebar.show { display: flex; }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--bot);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 20px; }
+    header button {
+      font-size: 22px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text);
+    }
+    .settings {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 10px;
+    }
+    .settings button {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background-color: #333;
+      color: #fff;
+      border-radius: 12px;
+    }
+    .chat {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 15px;
+      line-height: 1.5;
+      animation: fadeIn 0.4s ease;
+    }
+    .message.bot {
+      background-color: var(--bot);
+      align-self: flex-start;
+    }
+    .message.user {
+      background-color: #ffffff;
+      color: var(--text);
+      align-self: flex-end;
+      border: 1px solid var(--border);
+    }
+    body.dark .message.user {
+      background-color: #2a2a2a;
+      color: var(--text);
+    }
+    form {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background-color: var(--bot);
+      border-top: 1px solid var(--border);
+    }
+    form input {
+      flex: 1;
+      padding: 14px;
+      border-radius: 20px;
+      border: none;
+      background-color: #333;
+      color: #fff;
+      font-size: 15px;
+    
+  outline: none;
+  box-shadow: none;
+}
+    form button {
+      margin-left: 10px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background-color: var(--neutral); /* Alterado para usar variável */
+      color: var(--bg); /* Alterado para usar variável para contraste */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    form button:hover {
+      background-color: var(--muted); /* Alterado para usar variável */
+    }
+    .typing-indicator span {
+      background-color: var(--text);
+      border-radius: 50%;
+      display: inline-block;
+      height: 6px;
+      width: 6px;
+      margin: 0 2px;
+      animation: blink 1.4s infinite both;
+    }
+    @keyframes blink {
+      0% { opacity: 0.2; }
+      20% { opacity: 1; }
+      100% { opacity: 0.2; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+<style>
+  button {
+    -webkit-tap-highlight-color: transparent;
+    outline: none !important;
+  }
+  button:focus-visible {
+    outline: none !important;
+  }
+</style>
+<style>
+  button {
+    -webkit-tap-highlight-color: transparent;
+    outline: none !important;
+    transition: transform 0.1s ease;
+  }
+  button:focus-visible {
+    outline: none !important;
+  }
+  button:active {
+    transform: scale(0.97);
+  }
+</style>
+<style>
+  .botaoIdioma {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .botaoIdioma:active {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 2px var(--neutral);
+  }
+</style>
+</head>
+<body><iframe id="iframeLogin" srcdoc="
+&lt;!DOCTYPE html&gt;
+
+&lt;html lang=&quot;pt-BR&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;/&gt;
+&lt;meta content=&quot;width=device-width, initial-scale=1.0&quot; name=&quot;viewport&quot;/&gt;
+&lt;title&gt;Ultron - Login&lt;/title&gt;
+&lt;link href=&quot;https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;amp;display=swap&quot; rel=&quot;stylesheet&quot;/&gt;
+&lt;style&gt;
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #0f0f0f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+    }
+    .login-container {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+      background: #1a1a1a;
+      padding: 48px 32px;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      max-width: 340px;
+      width: 100%;
+      text-align: center;
+    }
+    .logo {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #3dbbff, #29d98d);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px auto;
+      font-size: 32px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .login-container h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .login-container p {
+      color: #aaa;
+      font-size: 14px;
+      margin-bottom: 48px;
+    }
+    .google-btn {
+      background: #2a2a2a;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #fff;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .google-btn:hover {
+      background: #333;
+    }
+    .google-icon {
+      height: 20px;
+      width: 20px;
+      margin-right: 12px;
+    }
+    .terms {
+      margin-top: 48px;
+      font-size: 11px;
+      color: #777;
+    }
+  &lt;/style&gt;
+&lt;style&gt;
+body, .login-container, #theme-icon {
+  transition: background-color 0.4s ease, color 0.4s ease, stroke 0.4s ease;
+}
+&lt;/style&gt;&lt;style&gt;
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+button:focus, button:active {
+  outline: none;
+  box-shadow: none;
+}
+&lt;/style&gt;&lt;/head&gt;
+&lt;body&gt;&lt;button aria-label=&quot;Alternar tema&quot; id=&quot;theme-toggle&quot; innerhtml=&quot;&quot; style=&quot;position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; padding: 4px; -webkit-tap-highlight-color: transparent; outline: none;&quot;&gt;
+&lt;svg fill=&quot;none&quot; height=&quot;28&quot; id=&quot;theme-icon&quot; stroke=&quot;white&quot; stroke-width=&quot;2&quot; viewbox=&quot;0 0 24 24&quot; width=&quot;28&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;path d=&quot;M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z&quot;&gt;&lt;/path&gt;
+&lt;/svg&gt;
+&lt;/button&gt;
+&lt;div class=&quot;login-container&quot; style=&quot;padding: 64px 24px; min-height: 520px;&quot;&gt;
+&lt;div class=&quot;logo&quot;&gt;U&lt;/div&gt;
+&lt;h1&gt;Bem-vindo ao Ultron&lt;/h1&gt;
+&lt;p&gt;A inteligência artificial do futuro, hoje.&lt;/p&gt;
+&lt;button class=&quot;google-btn&quot; id=&quot;botaoGoogle&quot; onclick=&quot;parent.pularLogin()&quot;&gt;
+&lt;img alt=&quot;Google Icon&quot; class=&quot;google-icon&quot; src=&quot;https://www.svgrepo.com/show/475656/google-color.svg&quot;/&gt;
+      Entrar com Google
+    &lt;/button&gt;
+&lt;div class=&quot;terms&quot;&gt;Ao entrar, você concorda com nossos Termos de Serviço&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+const toggle = document.getElementById('theme-toggle');
+const icon = document.getElementById('theme-icon');
+const container = document.querySelector('.login-container');
+const body = document.body;
+
+// Inicial: modo escuro
+body.style.backgroundColor = '#181818';
+body.style.color = '#ffffff';
+container.style.backgroundColor = '#1e1e1e';
+container.style.color = '#ffffff';
+icon.setAttribute('stroke', 'white');
+icon.innerHTML = '&lt;path d=&quot;M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z&quot;/&gt;';
+
+toggle.addEventListener('click', () =&gt; {
+    const isDark = body.style.backgroundColor === 'rgb(24, 24, 24)' || body.style.backgroundColor === '#181818';
+    if (isDark) {
+        body.style.backgroundColor = '#f4f4f4';
+        body.style.color = '#1e1e1e';
+        container.style.backgroundColor = '#ffffff';
+        container.style.color = '#1e1e1e';
+        icon.setAttribute('stroke', '#1e1e1e');
+        icon.innerHTML = '&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;5&quot;/&gt;&lt;path d=&quot;M12 1v2m0 18v2m11-11h-2M3 12H1m16.95 6.95-1.414-1.414M6.464 6.464 5.05 5.05m0 13.9 1.414-1.414M17.536 6.464l1.414-1.414&quot;/&gt;';
+    } else {
+        body.style.backgroundColor = '#181818';
+        body.style.color = '#ffffff';
+        container.style.backgroundColor = '#1e1e1e';
+        container.style.color = '#ffffff';
+        icon.setAttribute('stroke', 'white');
+        icon.innerHTML = '&lt;path d=&quot;M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z&quot;/&gt;';
+    }
+});
+&lt;/script&gt;&lt;/body&gt;
+&lt;/html&gt;
+" style="position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 9999; border: none;"></iframe>
+<div class="sidebar" id="sidebar" style="overflow-y: auto;">
+<button id="closeSidebar" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; color: var(--text); cursor: pointer;">
+<i data-lucide="x"></i>
+</button>
+<div>
+<h2 data-translate-key="sidebarTitle" style="margin-bottom: 20px;">Ultron</h2>
+<div class="settings">
+<div style="margin-bottom: 24px;">
+<div data-translate-key="generalSection" style="font-size: 13px; text-transform: uppercase; color: var(--muted); margin: 12px 0;">Geral</div>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<button id="accountBtn"><i data-lucide="user-cog"></i> <span data-translate-key="accountBtn">Conta</span></button>
+<button id="configBtn"><i data-lucide="settings"></i> <span data-translate-key="configBtn">Configurações</span></button>
+</div>
+</div>
+<div>
+<div data-translate-key="preferencesSection" style="font-size: 13px; text-transform: uppercase; color: var(--muted); margin: 12px 0;">Preferências</div>
+<div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+<button id="themeToggle"><i data-lucide="moon"></i><span data-translate-key="themeLabel" id="themeLabel">Modo Claro</span></button>
+<button id="languageBtn"><i data-lucide="globe"></i> <span data-translate-key="languageBtn">Idioma</span></button>
+</div>
+<div data-translate-key="informationSection" style="font-size: 13px; text-transform: uppercase; color: var(--muted); margin: 12px 0;">Informações</div>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<button id="knowledgeBtn"><i data-lucide="book-open"></i> <span data-translate-key="knowledgeBtn">Conhecimento</span></button>
+<button id="aboutBtn"><i data-lucide="info"></i> <span data-translate-key="aboutBtn">Sobre nós</span></button>
+</div>
+</div>
+<!-- Seção Histórico de Chats Adicionada -->
+<div style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+<div data-translate-key="chatHistorySection" style="font-size: 13px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px;">Histórico</div>
+<div id="chatList" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+<!-- Lista de chats será populada aqui via JS -->
+</div>
+</div>
+<!-- Fim da Seção Histórico de Chats -->
+</div>
+</div>
+</div>
+<div class="main">
+<header>
+<button id="toggleSidebar"><i data-lucide="menu"></i></button>
+<h1 data-translate-key="mainTitle">Ultron</h1>
+<button id="newChatBtn" style="margin-left: auto;" title="Novo Chat"><i data-lucide="plus-square"></i></button> <!-- Botão Novo Chat Adicionado -->
+</header>
+<div class="chat" id="chat">
+<div class="message bot" data-translate-key="greeting">Olá! Como posso ajudar?</div>
+</div>
+<form id="form">
+<input autocomplete="off" data-translate-key="inputPlaceholder" id="input" placeholder="Digite aqui..." type="text"/>
+<button id="enviarMensagemBtn" type="submit"><i data-lucide="arrow-up"></i></button>
+</form>
+</div>
+<!-- Telas Ocultas -->
+<div id="telaConta" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text); z-index: 50; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+<button id="voltarConta" style="background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer;"><i data-lucide="arrow-left"></i></button>
+<h2 data-translate-key="accountTitle" style="font-size: 22px; font-weight: 600;">Conta</h2>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+<div id="editarFotoPerfil" style="width: 80px; height: 80px; border-radius: 50%; background: var(--neutral); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 500; color: #fff;">F</div>
+<p data-translate-key="editProfilePic" style="font-size: 14px; color: var(--muted); margin-bottom: 24px;">Toque para alterar a foto de perfil</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<div style="background: var(--bot); padding: 14px 18px; border-radius: 12px; background: var(--bot); color: var(--text);">
+<div data-translate-key="nameLabel" style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Nome</div>
+<div style="font-size: 15px; display: flex; align-items: center; justify-content: space-between;">
+<span id="nomeUsuario"></span>
+<button data-translate-key="editBtn" id="editarNomeBtn" style="margin-left: 10px; background: none; border: none; font-size: 14px; color: var(--muted); cursor: pointer;">Editar</button>
+</div>
+</div>
+<div style="background: var(--bot); padding: 14px 18px; border-radius: 12px; background: var(--bot); color: var(--text);">
+<div data-translate-key="emailLabel" style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">E-mail</div>
+<div id="emailUsuario" style="font-size: 15px;"></div>
+</div>
+<button data-translate-key="logoutBtn" id="excluirContaBtn" style="padding: 14px 18px; border: none; border-radius: 12px; background: var(--bot); color: var(--text); font-size: 15px;; background: var(--bot); color: var(--text);">Sair</button>
+</div>
+</div>
+<div id="telaEditarNome" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text); z-index: 60; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+<button id="voltarEditarNome" style="background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer;"><i data-lucide="arrow-left"></i></button>
+<h2 data-translate-key="editNameTitle" style="font-size: 20px; font-weight: 600;">Editar nome</h2>
+</div>
+<label data-translate-key="nameLabel" style="font-size: 14px; margin-bottom: 6px;">Nome</label>
+<div style="display: flex; align-items: center; background: var(--bot); border-radius: 12px; padding: 12px 16px; margin-bottom: auto;">
+<input id="inputNomeUsuario" style="flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-size: 15px;" type="text"/>
+<button id="limparNome" style="background: none; border: none; font-size: 16px; color: var(--muted);"><i data-lucide="\'x\'"></i></button>
+</div>
+<button data-translate-key="saveBtn" id="salvarNomeBtn" style="margin-top: auto; background: var(--neutral); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px;">Salvar</button>
+</div>
+<div id="telaConfiguracoes" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text); z-index: 50; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+<button id="voltarConfiguracoes" style="background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer;"><i data-lucide="arrow-left"></i></button>
+<h2 data-translate-key="configTitle" style="font-size: 20px; font-weight: 600;">Configurações</h2>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<button id="limparHistoricoBtn" style="display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 12px; background: var(--bot); border: none; font-size: 15px; color: var(--text);">
+<i data-lucide="trash-2"></i> <span data-translate-key="clearHistoryBtn">Limpar histórico</span>
+</button>
+<button id="sobreAppBtn" style="display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 12px; background: var(--bot); border: none; font-size: 15px; color: var(--text);">
+<i data-lucide="info"></i> <span data-translate-key="aboutAppBtn">Sobre o app</span>
+</button>
+</div>
+</div>
+<div id="telaNotificacoes" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text); z-index: 70; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+<button id="voltarNotificacoes" style="background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer;"><i data-lucide="arrow-left"></i></button>
+<h2 data-translate-key="notificationsTitle" style="font-size: 20px; font-weight: 600;">Notificações</h2>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 12px; background: var(--bot);">
+<span data-translate-key="newMessagesNotif" style="font-size: 15px;">Novas mensagens</span>
+<input id="notificaMensagens" type="checkbox"/>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 12px; background: var(--bot);">
+<span data-translate-key="updatesNotif" style="font-size: 15px;">Atualizações</span>
+<input id="notificaAtualizacoes" type="checkbox"/>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 12px; background: var(--bot);">
+<span data-translate-key="soundNotif" style="font-size: 15px;">Som ao receber</span>
+<input id="notificaSom" type="checkbox"/>
+</div>
+</div>
+</div>
+<div id="telaLimparHistorico" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text); z-index: 70; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+<button id="voltarLimparHistorico" style="background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer;"><i data-lucide="arrow-left"></i></button>
+<h2 data-translate-key="clearHistoryTitle" style="font-size: 20px; font-weight: 600;">Limpar histórico</h2>
+</div>
+<p data-translate-key="clearHistoryConfirm" style="font-size: 14px; color: var(--muted); margin-bottom: auto;">Esta ação removerá todas as mensagens do seu histórico de conversa. Deseja continuar?</p>
+<button data-translate-key="clearNowBtn" id="confirmarLimpeza" style="margin-top: auto; background: var(--neutral); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px;">Limpar agora</button>
+</div>
+<div id="telaSobreApp" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text); z-index: 70; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+<button id="voltarSobreApp" style="background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer;"><i data-lucide="arrow-left"></i></button>
+<h2 data-translate-key="aboutAppTitle" style="font-size: 20px; font-weight: 600;">Sobre o app</h2>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; font-size: 15px;">
+<div><strong data-translate-key="appNameLabel">Nome:</strong> Ultron</div>
+<div><strong data-translate-key="versionLabel">Versão:</strong> 1.0</div>
+<div><strong data-translate-key="developerLabel">Desenvolvedor:</strong> <span data-translate-key="developerName"></span></div>
+<div><strong data-translate-key="lastUpdateLabel">Última atualização:</strong> <span data-translate-key="lastUpdateDate">Maio de 2025</span></div>
+</div>
+</div>
+<div id="telaIdioma" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text); z-index: 80; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+<button id="voltarIdioma" style="background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer;">
+<i data-lucide="arrow-left"></i>
+</button>
+<h2 data-translate-key="languageTitle" style="font-size: 20px; font-weight: 600;">Idioma</h2>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<button class="botaoIdioma" data-lang="pt" data-translate-key="langPortuguese" style="padding: 14px 16px; border-radius: 12px; background: var(--bot); border: none; font-size: 15px; color: var(--text);">Português</button>
+<button class="botaoIdioma" data-lang="en" data-translate-key="langEnglish" style="padding: 14px 16px; border-radius: 12px; background: var(--bot); border: none; font-size: 15px; color: var(--text);">Inglês</button>
+<button class="botaoIdioma" data-lang="es" data-translate-key="langSpanish" style="padding: 14px 16px; border-radius: 12px; background: var(--bot); border: none; font-size: 15px; color: var(--text);">Espanhol</button>
+</div>
+</div>
+<div id="telaConhecimento" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text); z-index: 80; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px;">
+<button id="voltarConhecimento" style="background: none; border: none; font-size: 22px; color: var(--text); cursor: pointer;">
+<i data-lucide="arrow-left"></i>
+</button>
+<h2 data-translate-key="knowledgeTitle" style="font-size: 20px; font-weight: 600;">Conhecimento</h2>
+</div>
+<div style="margin-top: 20px; display: flex; flex-direction: column; gap: 14px;">
+<div style="background: var(--bot); padding: 16px; border-radius: 12px;">
+<h3 data-translate-key="knowledgeHowTitle" style="margin-bottom: 6px; font-size: 16px;">Como o Ultron funciona?</h3>
+<p data-translate-key="knowledgeHowDesc" style="font-size: 14px; color: var(--muted);">Aprenda sobre o mecanismo de resposta e como ele interpreta perguntas.</p>
+</div>
+<div style="background: var(--bot); padding: 16px; border-radius: 12px;">
+<h3 data-translate-key="knowledgeCommandsTitle" style="margin-bottom: 6px; font-size: 16px;">Comandos úteis</h3>
+<p data-translate-key="knowledgeCommandsDesc" style="font-size: 14px; color: var(--muted);">Veja exemplos de comandos que você pode dar ao Ultron.</p>
+</div>
+<div style="background: var(--bot); padding: 16px; border-radius: 12px;">
+<h3 data-translate-key="knowledgePrivacyTitle" style="margin-bottom: 6px; font-size: 16px;">Privacidade e segurança</h3>
+<p data-translate-key="knowledgePrivacyDesc" style="font-size: 14px; color: var(--muted);">Entenda como suas informações são tratadas e protegidas.</p>
+</div>
+</div>
+</div>
+<div id="telaSobreNos" style="position: fixed; inset: 0; background-color: var(--bg); color: var(--text);
+z-index: 80; display: none; flex-direction: column; padding: 24px 20px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+<button id="voltarSobreNos" style="background: none; border: none; font-size: 22px;
+    color: var(--text); cursor: pointer;">
+<i data-lucide="arrow-left"></i>
+</button>
+<h2 data-translate-key="aboutUsTitle" style="font-size: 20px; font-weight: 600;">Sobre nós</h2>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; font-size: 15px; margin-top: 20px;">
+<div><strong data-translate-key="missionLabel">Missão:</strong> <span data-translate-key="missionText">Tornar o Ultron um assistente inteligente e acessível para todas as pessoas, em qualquer lugar.</span></div>
+<div><strong data-translate-key="visionLabel">Visão:</strong> <span data-translate-key="visionText">Ser referência em assistentes pessoais com IA, com foco em simplicidade e autonomia.</span></div>
+<div><strong data-translate-key="goalLabel">Objetivo:</strong> <span data-translate-key="goalText">Ajudar os usuários a organizarem suas tarefas, aprenderem com facilidade e se comunicarem melhor com tecnologia.</span></div>
+<div><strong data-translate-key="devMessageLabel">Mensagem do desenvolvedor:</strong> <span data-translate-key="devMessageText">“Criei o Ultron para unir inteligência, utilidade e um toque de humanidade em um só app.”</span></div>
+<div><strong data-translate-key="contactEmailLabel">E-mail de contato:</strong> suporte@ultron.app</div>
+</div>
+</div>
+<!-- Scripts -->
+<script>
+  // --- Dicionário de Traduções ---
+  const translations = {
+    pt: {
+      sidebarTitle: "Ultron",
+      generalSection: "Geral",
+      accountBtn: "Conta",
+      configBtn: "Configurações",
+      preferencesSection: "Preferências",
+      themeLabel: "Modo Claro", // Será atualizado dinamicamente
+      languageBtn: "Idioma",
+      informationSection: "Informações",
+      knowledgeBtn: "Conhecimento",
+      aboutBtn: "Sobre nós",
+      mainTitle: "Ultron",
+      greeting: "Olá! Como posso ajudar?",
+      inputPlaceholder: "Digite aqui...",
+      accountTitle: "Conta",
+      editProfilePic: "Toque para alterar a foto de perfil",
+      nameLabel: "Nome",
+      editBtn: "Editar",
+      emailLabel: "E-mail",
+      logoutBtn: "Sair",
+      editNameTitle: "Editar nome",
+      saveBtn: "Salvar",
+      configTitle: "Configurações",
+      notificationsBtn: "Notificações",
+      securityBtn: "Segurança",
+      clearHistoryBtn: "Limpar histórico",
+      aboutAppBtn: "Sobre o app",
+      notificationsTitle: "Notificações",
+      newMessagesNotif: "Novas mensagens",
+      updatesNotif: "Atualizações",
+      soundNotif: "Som ao receber",
+      securityTitle: "Segurança",
+      changePassword: "Alterar senha",
+      connectedDevices: "Dispositivos conectados",
+      twoFactorAuth: "Autenticação em 2 etapas",
+      clearHistoryTitle: "Limpar histórico",
+      clearHistoryConfirm: "Esta ação removerá todas as mensagens do seu histórico de conversa. Deseja continuar?",
+      clearNowBtn: "Limpar agora",
+      aboutAppTitle: "Sobre o app",
+      appNameLabel: "Nome:",
+      versionLabel: "Versão:",
+      developerLabel: "Desenvolvedor:",
+      developerName: "", // Preencher se souber
+      lastUpdateLabel: "Última atualização:",
+      lastUpdateDate: "Maio de 2025",
+      languageTitle: "Idioma",
+      langPortuguese: "Português",
+      langEnglish: "Inglês",
+      langSpanish: "Espanhol",
+      knowledgeTitle: "Conhecimento",
+      knowledgeHowTitle: "Como o Ultron funciona?",
+      knowledgeHowDesc: "Aprenda sobre o mecanismo de resposta e como ele interpreta perguntas.",
+      knowledgeCommandsTitle: "Comandos úteis",
+      knowledgeCommandsDesc: "Veja exemplos de comandos que você pode dar ao Ultron.",
+      knowledgePrivacyTitle: "Privacidade e segurança",
+      knowledgePrivacyDesc: "Entenda como suas informações são tratadas e protegidas.",
+      aboutUsTitle: "Sobre nós",
+      missionLabel: "Missão:",
+      missionText: "Tornar o Ultron um assistente inteligente e acessível para todas as pessoas, em qualquer lugar.",
+      visionLabel: "Visão:",
+      visionText: "Ser referência em assistentes pessoais com IA, com foco em simplicidade e autonomia.",
+      goalLabel: "Objetivo:",
+      goalText: "Ajudar os usuários a organizarem suas tarefas, aprenderem com facilidade e se comunicarem melhor com tecnologia.",
+      devMessageLabel: "Mensagem do desenvolvedor:",
+      devMessageText: "“Criei o Ultron para unir inteligência, utilidade e um toque de humanidade em um só app.”",
+      contactEmailLabel: "E-mail de contato:",
+      themeDark: "Modo Escuro",
+      themeLight: "Modo Claro",
+      typingIndicator: "Ultron está digitando",
+      youSaid: "Você disse:",
+      chatHistorySection: "Histórico",
+      newChatBtnLabel: "Novo Chat",
+      chatTitlePrefix: "Chat" // Usado para nomear chats na lista
+    },
+    en: {
+      sidebarTitle: "Ultron",
+      generalSection: "General",
+      accountBtn: "Account",
+      configBtn: "Settings",
+      preferencesSection: "Preferences",
+      themeLabel: "Light Mode",
+      languageBtn: "Language",
+      informationSection: "Information",
+      knowledgeBtn: "Knowledge",
+      aboutBtn: "About us",
+      mainTitle: "Ultron",
+      greeting: "Hello! How can I help?",
+      inputPlaceholder: "Type here...",
+      accountTitle: "Account",
+      editProfilePic: "Tap to change profile picture",
+      nameLabel: "Name",
+      editBtn: "Edit",
+      emailLabel: "E-mail",
+      logoutBtn: "Logout",
+      editNameTitle: "Edit name",
+      saveBtn: "Save",
+      configTitle: "Settings",
+      notificationsBtn: "Notifications",
+      securityBtn: "Security",
+      clearHistoryBtn: "Clear history",
+      aboutAppBtn: "About the app",
+      notificationsTitle: "Notifications",
+      newMessagesNotif: "New messages",
+      updatesNotif: "Updates",
+      soundNotif: "Sound on receive",
+      securityTitle: "Security",
+      changePassword: "Change password",
+      connectedDevices: "Connected devices",
+      twoFactorAuth: "2-Step Verification",
+      clearHistoryTitle: "Clear history",
+      clearHistoryConfirm: "This action will remove all messages from your conversation history. Do you wish to continue?",
+      clearNowBtn: "Clear now",
+      aboutAppTitle: "About the app",
+      appNameLabel: "Name:",
+      versionLabel: "Version:",
+      developerLabel: "Developer:",
+      developerName: "",
+      lastUpdateLabel: "Last update:",
+      lastUpdateDate: "May 2025",
+      languageTitle: "Language",
+      langPortuguese: "Portuguese",
+      langEnglish: "English",
+      langSpanish: "Spanish",
+      knowledgeTitle: "Knowledge",
+      knowledgeHowTitle: "How does Ultron work?",
+      knowledgeHowDesc: "Learn about the response mechanism and how it interprets questions.",
+      knowledgeCommandsTitle: "Useful commands",
+      knowledgeCommandsDesc: "See examples of commands you can give Ultron.",
+      knowledgePrivacyTitle: "Privacy and security",
+      knowledgePrivacyDesc: "Understand how your information is handled and protected.",
+      aboutUsTitle: "About us",
+      missionLabel: "Mission:",
+      missionText: "Make Ultron an intelligent and accessible assistant for everyone, everywhere.",
+      visionLabel: "Vision:",
+      visionText: "To be a reference in personal assistants with AI, focusing on simplicity and autonomy.",
+      goalLabel: "Goal:",
+      goalText: "Help users organize their tasks, learn easily, and communicate better with technology.",
+      devMessageLabel: "Developer message:",
+      devMessageText: "“I created Ultron to unite intelligence, utility, and a touch of humanity in one app.”",
+      contactEmailLabel: "Contact e-mail:",
+      themeDark: "Dark Mode",
+      themeLight: "Light Mode",
+      typingIndicator: "Ultron is typing",
+      youSaid: "You said:",
+      chatHistorySection: "History",
+      newChatBtnLabel: "New Chat",
+      chatTitlePrefix: "Chat"
+    },
+    es: {
+      sidebarTitle: "Ultron",
+      generalSection: "General",
+      accountBtn: "Cuenta",
+      configBtn: "Configuración",
+      preferencesSection: "Preferencias",
+      themeLabel: "Modo Claro",
+      languageBtn: "Idioma",
+      informationSection: "Información",
+      knowledgeBtn: "Conocimiento",
+      aboutBtn: "Sobre nosotros",
+      mainTitle: "Ultron",
+      greeting: "¡Hola! ¿Cómo puedo ayudar?",
+      inputPlaceholder: "Escribe aquí...",
+      accountTitle: "Cuenta",
+      editProfilePic: "Toca para cambiar la foto de perfil",
+      nameLabel: "Nombre",
+      editBtn: "Editar",
+      emailLabel: "Correo electrónico",
+      logoutBtn: "Salir",
+      editNameTitle: "Editar nombre",
+      saveBtn: "Guardar",
+      configTitle: "Configuración",
+      notificationsBtn: "Notificaciones",
+      securityBtn: "Seguridad",
+      clearHistoryBtn: "Borrar historial",
+      aboutAppBtn: "Sobre la app",
+      notificationsTitle: "Notificaciones",
+      newMessagesNotif: "Nuevos mensajes",
+      updatesNotif: "Actualizaciones",
+      soundNotif: "Sonido al recibir",
+      securityTitle: "Seguridad",
+      changePassword: "Cambiar contraseña",
+      connectedDevices: "Dispositivos conectados",
+      twoFactorAuth: "Verificación en 2 pasos",
+      clearHistoryTitle: "Borrar historial",
+      clearHistoryConfirm: "Esta acción eliminará todos los mensajes de tu historial de conversación. ¿Deseas continuar?",
+      clearNowBtn: "Borrar ahora",
+      aboutAppTitle: "Sobre la app",
+      appNameLabel: "Nombre:",
+      versionLabel: "Versión:",
+      developerLabel: "Desarrollador:",
+      developerName: "",
+      lastUpdateLabel: "Última actualización:",
+      lastUpdateDate: "Mayo de 2025",
+      languageTitle: "Idioma",
+      langPortuguese: "Portugués",
+      langEnglish: "Inglés",
+      langSpanish: "Español",
+      knowledgeTitle: "Conocimiento",
+      knowledgeHowTitle: "¿Cómo funciona Ultron?",
+      knowledgeHowDesc: "Aprende sobre el mecanismo de respuesta y cómo interpreta las preguntas.",
+      knowledgeCommandsTitle: "Comandos útiles",
+      knowledgeCommandsDesc: "Ve ejemplos de comandos que puedes dar a Ultron.",
+      knowledgePrivacyTitle: "Privacidad y seguridad",
+      knowledgePrivacyDesc: "Entiende cómo se maneja y protege tu información.",
+      aboutUsTitle: "Sobre nosotros",
+      missionLabel: "Misión:",
+      missionText: "Hacer de Ultron un asistente inteligente y accesible para todas las personas, en cualquier lugar.",
+      visionLabel: "Visión:",
+      visionText: "Ser referencia en asistentes personales con IA, con foco en simplicidad y autonomía.",
+      goalLabel: "Objetivo:",
+      goalText: "Ayudar a los usuarios a organizar sus tareas, aprender con facilidad y comunicarse mejor con la tecnología.",
+      devMessageLabel: "Mensaje del desarrollador:",
+      devMessageText: "“Creé Ultron para unir inteligencia, utilidad y un toque de humanidad en una sola app.”",
+      contactEmailLabel: "Correo de contacto:",
+      themeDark: "Modo Oscuro",
+      themeLight: "Modo Claro",
+      typingIndicator: "Ultron está escribiendo",
+      youSaid: "Dijiste:",
+      chatHistorySection: "Historial",
+      newChatBtnLabel: "Nuevo Chat",
+      chatTitlePrefix: "Chat"
+    }
+  };
+
+  // --- Função de Tradução ---
+  function setLanguage(lang) {
+    if (!translations[lang]) {
+      console.error(`Idioma '${lang}' não encontrado nas traduções.`);
+      return;
+    }
+    localStorage.setItem('ultron-lang', lang);
+    document.documentElement.lang = lang;
+
+    const elements = document.querySelectorAll('[data-translate-key]');
+    elements.forEach(el => {
+      const key = el.getAttribute('data-translate-key');
+      const translation = translations[lang][key];
+
+      if (translation !== undefined) {
+        if (el.tagName === 'INPUT' && el.placeholder) {
+          el.placeholder = translation;
+        } else if (el.tagName === 'SPAN' || el.tagName === 'DIV' || el.tagName === 'P' || el.tagName === 'H1' || el.tagName === 'H2' || el.tagName === 'H3' || el.tagName === 'BUTTON' || el.tagName === 'LABEL' || el.tagName === 'STRONG') {
+           // Tenta encontrar e substituir apenas o nó de texto direto, se houver
+           let textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '');
+           if(textNode) {
+               textNode.textContent = translation;
+           } else {
+               // Se não houver nó de texto direto (ex: botão só com ícone e span), atualiza o span interno se existir
+               let spanChild = el.querySelector('span');
+               if(spanChild && spanChild.getAttribute('data-translate-key') === key) {
+                   spanChild.innerText = translation;
+               } else {
+                   // Fallback: atualiza o innerText do elemento principal (pode remover ícones se não tratado com cuidado)
+                   // Verifica se o elemento já contém um ícone para não sobrescrevê-lo
+                   const hasIcon = el.querySelector('i[data-lucide]') !== null;
+                   if (!hasIcon) {
+                       el.innerText = translation;
+                   }
+                   // Se for um botão e tiver um span, atualiza o span
+                   else if (el.tagName === 'BUTTON' && spanChild) {
+                       spanChild.innerText = translation;
+                   }
+               }
+           }
+        }
+      } else {
+        console.warn(`Chave de tradução '${key}' não encontrada para o idioma '${lang}'.`);
+      }
+    });
+
+    // Atualiza o texto do botão de tema dinamicamente
+    const themeLabelEl = document.getElementById('themeLabel');
+    if (themeLabelEl) {
+        const currentTheme = localStorage.getItem('ultron-theme') || 'light';
+        themeLabelEl.innerText = currentTheme === 'dark' ? translations[lang].themeDark : translations[lang].themeLight;
+    }
+
+    // Atualiza o texto do indicador de digitação (se necessário)
+    // Esta parte precisará ser integrada à lógica de chat existente
+
+    // Atualiza o texto da resposta do bot (se necessário)
+    // Esta parte precisará ser integrada à lógica de chat existente
+
+    console.log(`Idioma alterado para: ${lang}`);
+  }
+
+  // --- Lógica de Navegação e Inicialização ---
+  document.addEventListener("DOMContentLoaded", () => {
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const closeSidebarBtn = document.getElementById("closeSidebar");
+    const themeToggle = document.getElementById("themeToggle");
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+    const chat = document.getElementById("chat");
+
+    // Botões de navegação
+    const accountBtn = document.getElementById("accountBtn");
+    const configBtn = document.getElementById("configBtn");
+    const languageBtn = document.getElementById("languageBtn");
+    const knowledgeBtn = document.getElementById("knowledgeBtn");
+    const aboutBtn = document.getElementById("aboutBtn");
+
+    // Telas
+    const telaConta = document.getElementById("telaConta");
+    const telaConfiguracoes = document.getElementById("telaConfiguracoes");
+    const telaIdioma = document.getElementById("telaIdioma");
+    const telaConhecimento = document.getElementById("telaConhecimento");
+    const telaSobreNos = document.getElementById("telaSobreNos");
+    const telaEditarNome = document.getElementById("telaEditarNome");
+    const telaNotificacoes = document.getElementById("telaNotificacoes");
+    const telaSeguranca = document.getElementById("telaSeguranca");
+    const telaLimparHistorico = document.getElementById("telaLimparHistorico");
+    const telaSobreApp = document.getElementById("telaSobreApp");
+
+    // Botões de Voltar
+    const voltarConta = document.getElementById("voltarConta");
+    const voltarConfiguracoes = document.getElementById("voltarConfiguracoes");
+    const voltarIdioma = document.getElementById("voltarIdioma");
+    const voltarConhecimento = document.getElementById("voltarConhecimento");
+    const voltarSobreNos = document.getElementById("voltarSobreNos");
+    const voltarEditarNome = document.getElementById("voltarEditarNome");
+    const voltarNotificacoes = document.getElementById("voltarNotificacoes");
+    const voltarSeguranca = document.getElementById("voltarSeguranca");
+    const voltarLimparHistorico = document.getElementById("voltarLimparHistorico");
+    const voltarSobreApp = document.getElementById("voltarSobreApp");
+
+    // Botões de Ação
+    const editarNomeBtn = document.getElementById("editarNomeBtn");
+    const salvarNomeBtn = document.getElementById("salvarNomeBtn");
+    const limparNome = document.getElementById("limparNome");
+    const excluirContaBtn = document.getElementById("excluirContaBtn");
+    const editarFotoPerfil = document.getElementById("editarFotoPerfil");
+    const notificacoesBtn = document.getElementById("notificacoesBtn");
+    const segurancaBtn = document.getElementById("segurancaBtn");
+    const limparHistoricoBtn = document.getElementById("limparHistoricoBtn");
+    const sobreAppBtn = document.getElementById("sobreAppBtn");
+    const confirmarLimpeza = document.getElementById("confirmarLimpeza");
+    const idiomaBtns = document.querySelectorAll(".botaoIdioma");
+
+    // --- Funções de Navegação --- 
+    function openScreen(screenElement) {
+        if(screenElement) screenElement.style.display = "flex";
+        if(sidebar) sidebar.classList.remove("show");
+    }
+
+    function closeScreen(screenElement) {
+        if(screenElement) screenElement.style.display = "none";
+    }
+
+    function goBack(currentScreen, targetScreen = sidebar) {
+        closeScreen(currentScreen);
+        if (targetScreen === sidebar) {
+            sidebar.classList.add("show");
+        } else {
+            openScreen(targetScreen);
+        }
+    }
+
+    // --- Event Listeners --- 
+
+    // Sidebar Toggle
+    toggleBtn?.addEventListener("click", () => sidebar.classList.toggle("show"));
+    closeSidebarBtn?.addEventListener("click", () => sidebar.classList.remove("show"));
+
+    // Navegação Principal
+    accountBtn?.addEventListener("click", () => openScreen(telaConta));
+    configBtn?.addEventListener("click", () => openScreen(telaConfiguracoes));
+    languageBtn?.addEventListener("click", () => openScreen(telaIdioma));
+    knowledgeBtn?.addEventListener("click", () => openScreen(telaConhecimento));
+    aboutBtn?.addEventListener("click", () => openScreen(telaSobreNos));
+
+    // Navegação de Configurações
+    notificacoesBtn?.addEventListener("click", () => goBack(telaConfiguracoes, telaNotificacoes));
+    segurancaBtn?.addEventListener("click", () => goBack(telaConfiguracoes, telaSeguranca));
+    limparHistoricoBtn?.addEventListener("click", () => goBack(telaConfiguracoes, telaLimparHistorico));
+    sobreAppBtn?.addEventListener("click", () => goBack(telaConfiguracoes, telaSobreApp));
+
+    // Botões de Voltar
+    voltarConta?.addEventListener("click", () => goBack(telaConta));
+    voltarConfiguracoes?.addEventListener("click", () => goBack(telaConfiguracoes));
+    voltarIdioma?.addEventListener("click", () => goBack(telaIdioma));
+    voltarConhecimento?.addEventListener("click", () => goBack(telaConhecimento));
+    voltarSobreNos?.addEventListener("click", () => goBack(telaSobreNos));
+    voltarEditarNome?.addEventListener("click", () => goBack(telaEditarNome, telaConta));
+    voltarNotificacoes?.addEventListener("click", () => goBack(telaNotificacoes, telaConfiguracoes));
+    voltarSeguranca?.addEventListener("click", () => goBack(telaSeguranca, telaConfiguracoes));
+    voltarLimparHistorico?.addEventListener("click", () => goBack(telaLimparHistorico, telaConfiguracoes));
+    voltarSobreApp?.addEventListener("click", () => goBack(telaSobreApp, telaConfiguracoes));
+
+    // Tema
+    themeToggle?.addEventListener("click", () => {
+      const isDark = document.body.classList.toggle("dark");
+      const newTheme = isDark ? "dark" : "light";
+      localStorage.setItem("ultron-theme", newTheme);
+      // Atualiza label do tema usando a função de tradução
+      const currentLang = localStorage.getItem('ultron-lang') || 'pt';
+      const themeLabelEl = document.getElementById('themeLabel');
+      if(themeLabelEl) {
+          themeLabelEl.innerText = newTheme === 'dark' ? translations[currentLang].themeDark : translations[currentLang].themeLight;
+      }
+      // Atualiza ícone
+      const themeIcon = themeToggle.querySelector("i");
+      if(themeIcon) {
+          themeIcon.setAttribute("data-lucide", isDark ? "sun" : "moon");
+          lucide.createIcons();
+      }
+    });
+
+    // Idioma
+    idiomaBtns.forEach(button => {
+      button.addEventListener("click", () => {
+        const lang = button.getAttribute("data-lang");
+        setLanguage(lang);
+        goBack(telaIdioma); // Volta para a sidebar após selecionar
+      });
+    });
+
+    // Chat
+    form?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      appendMessage("user", text);
+      input.value = "";
+      showTypingIndicator(); 
+      // Aqui entraria a lógica para processar a mensagem e obter a resposta do bot
+      setTimeout(() => {
+        const currentLang = localStorage.getItem('ultron-lang') || 'pt';
+        const responseText = responderUltron(text); // Exemplo
+        appendMessage("bot", responseText, true); // Passa true para remover indicador
+      }, 1500);
+    });
+
+    function appendMessage(role, text, removeTyping = false) {
+      if (removeTyping) {
+          const typingIndicator = chat.querySelector('.typing-indicator-wrapper');
+          if (typingIndicator) {
+              chat.removeChild(typingIndicator);
+          }
+      }
+      const msg = document.createElement("div");
+      msg.className = `message ${role}`;
+      msg.innerText = text;
+      chat.appendChild(msg);
+      chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+    }
+
+    function showTypingIndicator() {
+        // Remove indicador anterior se existir
+        const existingIndicator = chat.querySelector('.typing-indicator-wrapper');
+        if (existingIndicator) {
+            chat.removeChild(existingIndicator);
+        }
+
+        const currentLang = localStorage.getItem('ultron-lang') || 'pt';
+        const typingWrapper = document.createElement('div');
+        typingWrapper.className = 'message bot typing-indicator-wrapper'; // Adiciona classe wrapper
+        typingWrapper.innerHTML = `${translations[currentLang].typingIndicator} <span class="typing-indicator"><span></span><span></span><span></span></span>`;
+        chat.appendChild(typingWrapper);
+        chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    }
+
+    // Conta e Edição de Nome (Adaptações podem ser necessárias para tradução)
+    const nomeUsuarioEl = document.getElementById("nomeUsuario");
+    const tituloSidebarEl = document.querySelector(".sidebar h2");
+    const inputNomeEl = document.getElementById("inputNomeUsuario");
+    const emailUsuarioEl = document.querySelector("#telaConta #emailUsuario");
+
+    let nomeSalvo = localStorage.getItem("ultron-nome-usuario") || "User"; // Default genérico
+    let emailSalvo = window.googleUserEmail || localStorage.getItem("ultron-email-usuario") || "user@example.com";
+
+    if(nomeUsuarioEl) nomeUsuarioEl.textContent = nomeSalvo;
+    if(tituloSidebarEl) tituloSidebarEl.textContent = nomeSalvo; // Atualiza título da sidebar
+    if(inputNomeEl) inputNomeEl.value = nomeSalvo;
+    if(emailUsuarioEl) emailUsuarioEl.textContent = emailSalvo;
+
+    editarNomeBtn?.addEventListener("click", () => {
+      if(inputNomeEl) inputNomeEl.value = localStorage.getItem("ultron-nome-usuario") || "";
+      goBack(telaConta, telaEditarNome);
+    });
+
+    salvarNomeBtn?.addEventListener("click", () => {
+      const novoNome = inputNomeEl.value.trim();
+      if (novoNome) {
+        localStorage.setItem("ultron-nome-usuario", novoNome);
+        if(nomeUsuarioEl) nomeUsuarioEl.textContent = novoNome;
+        if(tituloSidebarEl) tituloSidebarEl.textContent = novoNome;
+        goBack(telaEditarNome, telaConta);
+        // alert("Nome atualizado com sucesso!"); // Considerar remover alert ou traduzir
+      }
+    });
+
+    voltarEditarNome?.addEventListener("click", () => goBack(telaEditarNome, telaConta));
+    limparNome?.addEventListener("click", () => { if(inputNomeEl) inputNomeEl.value = ""; });
+
+    // Editar Foto Perfil
+    const fotoSalva = localStorage.getItem("ultron-foto-perfil");
+    if (fotoSalva && editarFotoPerfil) {
+      editarFotoPerfil.style.background = `url('${fotoSalva}') center/cover no-repeat`;
+      editarFotoPerfil.textContent = '';
+    }
+    editarFotoPerfil?.addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const dataUrl = reader.result;
+                if(editarFotoPerfil) {
+                    editarFotoPerfil.style.background = `url('${dataUrl}') center/cover no-repeat`;
+                    editarFotoPerfil.textContent = '';
+                }
+                localStorage.setItem("ultron-foto-perfil", dataUrl);
+            };
+            reader.readAsDataURL(file);
+        };
+        input.click();
+    });
+
+    // Logout/Sair
+    excluirContaBtn?.addEventListener("click", () => {
+      // Lógica de logout Google (se aplicável)
+      // ... (código de logout Google omitido para simplicidade)
+      localStorage.removeItem("ultron-nome-usuario");
+      localStorage.removeItem("ultron-email-usuario");
+      localStorage.removeItem("ultron-foto-perfil");
+      localStorage.removeItem("ultron-lang"); // Limpa idioma também
+      localStorage.removeItem("ultron-theme"); // Limpa tema
+      location.reload();
+    });
+
+    // Limpar Histórico (Funcionalidade Completa)
+    confirmarLimpeza?.addEventListener("click", () => {
+        // Adiciona uma confirmação extra
+        if (confirm("Tem certeza que deseja apagar TODO o histórico de chats? Esta ação não pode ser desfeita.")) {
+            // Limpa os dados do localStorage
+            localStorage.removeItem(CHATS_KEY);
+            localStorage.removeItem(ACTIVE_CHAT_ID_KEY);
+
+            // Cria e carrega um novo chat inicial
+            const chats = {}; // Objeto de chats vazio
+            const newId = generateChatId();
+            chats[newId] = [];
+            saveChats(chats); // Salva o objeto com o novo chat vazio
+            loadChat(newId); // Carrega o novo chat
+
+            // Volta para a tela de configurações
+            goBack(telaLimparHistorico, telaConfiguracoes);
+
+            // Opcional: Feedback ao usuário (pode ser um toast/snackbar no futuro)
+            // alert("Histórico de chats apagado.");
+        }
+    });
+
+
+
+    // --- Gerenciamento de Histórico de Chat ---
+    const CHATS_KEY = 'ultron-chats';
+    const ACTIVE_CHAT_ID_KEY = 'ultron-active-chat-id';
+    const chatListEl = document.getElementById('chatList');
+    const newChatBtn = document.getElementById('newChatBtn');
+
+    function generateChatId() {
+        return `chat_${Date.now()}`;
+    }
+
+    function getSavedChats() {
+        const chatsJson = localStorage.getItem(CHATS_KEY);
+        try {
+            // Retorna um objeto vazio se não houver chats ou se o JSON for inválido
+            return chatsJson ? JSON.parse(chatsJson) : {};
+        } catch (e) {
+            console.error("Erro ao parsear chats salvos:", e);
+            localStorage.removeItem(CHATS_KEY); // Limpa dados inválidos
+            return {};
+        }
+    }
+
+    function saveChats(chats) {
+        try {
+            localStorage.setItem(CHATS_KEY, JSON.stringify(chats));
+        } catch (e) {
+            console.error("Erro ao salvar chats:", e);
+            // Poderia adicionar um alerta ao usuário sobre limite de storage
+        }
+    }
+
+    function getActiveChatId() {
+        return localStorage.getItem(ACTIVE_CHAT_ID_KEY);
+    }
+
+    function setActiveChatId(chatId) {
+        if (chatId) {
+            localStorage.setItem(ACTIVE_CHAT_ID_KEY, chatId);
+        } else {
+            localStorage.removeItem(ACTIVE_CHAT_ID_KEY);
+        }
+    }
+
+    function saveMessageToChat(chatId, role, text) {
+        if (!chatId) return; // Não salva se não houver chat ativo
+        const chats = getSavedChats();
+        if (!chats[chatId]) {
+            chats[chatId] = []; // Inicializa se for a primeira mensagem deste chat
+        }
+        // Evita salvar a mensagem de saudação inicial padrão
+        const currentLang = localStorage.getItem('ultron-lang') || 'pt';
+        if (role === 'bot' && text === translations[currentLang]?.greeting && chats[chatId].length === 0) {
+           return; // Não salva a saudação inicial
+        }
+        chats[chatId].push({ role, text, timestamp: Date.now() }); // Adiciona timestamp
+        saveChats(chats);
+    }
+
+    function loadChat(chatId) {
+        const chats = getSavedChats();
+        const chatMessages = chats[chatId] || [];
+        chat.innerHTML = ''; // Limpa chat atual
+
+        if (chatMessages.length === 0) {
+            // Se for um chat novo ou vazio, adiciona saudação inicial (sem salvar)
+            const currentLang = localStorage.getItem('ultron-lang') || 'pt';
+            appendMessage('bot', translations[currentLang]?.greeting || "Olá! Como posso ajudar?", false, false);
+        } else {
+            chatMessages.forEach(msg => {
+                // Carrega mensagens sem salvar novamente e sem remover indicador de digitação
+                appendMessage(msg.role, msg.text, false, false);
+            });
+        }
+        setActiveChatId(chatId);
+        renderChatList(); // Atualiza a lista para destacar o chat ativo
+        sidebar.classList.remove('show'); // Fecha sidebar ao carregar chat
+        // Garante que a rolagem vá para o final após carregar
+        setTimeout(() => chat.scrollTo({ top: chat.scrollHeight, behavior: "auto" }), 50); // Usar auto para ser mais rápido
+    }
+     function deleteChat(chatIdToDelete) {
+        const chats = getSavedChats();
+        if (!chats[chatIdToDelete]) return; // Sai se o chat não existe
+
+        // Remove o chat
+        delete chats[chatIdToDelete];
+        saveChats(chats);
+
+        const activeChatId = getActiveChatId();
+
+        // Se o chat deletado era o ativo
+        if (activeChatId === chatIdToDelete) {
+            setActiveChatId(null); // Limpa o ID ativo
+            // Tenta carregar o chat mais recente, ou cria um novo se não houver mais chats
+            const remainingChatIds = Object.keys(chats).sort((a, b) => {
+                 const lastMsgTimeA = chats[a]?.[chats[a].length - 1]?.timestamp || parseInt(a.split('_')[1] || '0');
+                 const lastMsgTimeB = chats[b]?.[chats[b].length - 1]?.timestamp || parseInt(b.split('_')[1] || '0');
+                 return lastMsgTimeB - lastMsgTimeA;
+            });
+
+            if (remainingChatIds.length > 0) {
+                loadChat(remainingChatIds[0]);
+            } else {
+                // Se não há mais chats, cria um novo
+                const newId = generateChatId();
+                chats[newId] = [];
+                saveChats(chats);
+                loadChat(newId);
+            }
+        } else {
+             // Se o chat deletado não era o ativo, apenas renderiza a lista
+             renderChatList();
+        }
+    }
+
+    function renderChatList() {
+        if (!chatListEl) return; // Sai se o elemento não existir
+        const chats = getSavedChats();
+        const activeChatId = getActiveChatId();
+        chatListEl.innerHTML = ''; // Limpa lista atual
+        const currentLang = localStorage.getItem('ultron-lang') || 'pt';
+
+        // Ordena os chats pelo timestamp da última mensagem ou ID de criação
+        const sortedChatIds = Object.keys(chats).sort((a, b) => {
+            const lastMsgTimeA = chats[a]?.[chats[a].length - 1]?.timestamp || parseInt(a.split('_')[1] || '0');
+            const lastMsgTimeB = chats[b]?.[chats[b].length - 1]?.timestamp || parseInt(b.split('_')[1] || '0');
+            return lastMsgTimeB - lastMsgTimeA;
+        });
+
+        sortedChatIds.forEach((chatId, index) => {
+            const listItemContainer = document.createElement('div');
+            listItemContainer.style.cssText = `
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                border-radius: 8px;
+                background-color: ${chatId === activeChatId ? 'var(--neutral)' : 'transparent'};
+                margin-bottom: 5px;
+                transition: background-color 0.2s ease;
+            `;
+            listItemContainer.onmouseenter = () => { if (chatId !== activeChatId) listItemContainer.style.backgroundColor = 'rgba(128, 128, 128, 0.1)'; };
+            listItemContainer.onmouseleave = () => { if (chatId !== activeChatId) listItemContainer.style.backgroundColor = 'transparent'; };
+
+            const chatButton = document.createElement('button');
+            chatButton.style.cssText = `
+                flex-grow: 1;
+                padding: 10px 14px;
+                border: none;
+                background-color: transparent; /* Botão transparente */
+                color: var(--text);
+                text-align: left;
+                font-size: 14px;
+                cursor: pointer;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            `;
+
+            // Tenta pegar a primeira mensagem do usuário como título, senão usa um genérico
+            const firstUserMessage = chats[chatId]?.find(m => m.role === 'user');
+            let chatTitle = firstUserMessage?.text || `${translations[currentLang]?.chatTitlePrefix || 'Chat'} ${sortedChatIds.length - index}`;
+            const MAX_TITLE_LENGTH = 25; // Reduzido para dar espaço ao botão
+            if (chatTitle.length > MAX_TITLE_LENGTH) {
+                chatTitle = chatTitle.substring(0, MAX_TITLE_LENGTH - 3) + '...';
+            }
+
+            chatButton.textContent = chatTitle;
+            chatButton.title = firstUserMessage?.text || chatTitle;
+            chatButton.onclick = () => loadChat(chatId);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.innerHTML = '<i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>'; // Ícone de lixeira
+            deleteButton.style.cssText = `
+                padding: 8px;
+                margin-right: 6px; /* Espaço à direita */
+                border: none;
+                background-color: transparent;
+                color: var(--text); /* Alterado para var(--text) para melhor visibilidade base */
+                cursor: pointer;
+                border-radius: 4px;
+                opacity: 0.7; /* Opacidade padrão aumentada ligeiramente */
+                transition: opacity 0.2s ease, color 0.2s ease;
+            `;
+            deleteButton.title = "Apagar Chat"; // Tooltip
+            deleteButton.onmouseenter = () => { deleteButton.style.opacity = '1'; deleteButton.style.color = 'red'; }; // Mantém hover vermelho
+            deleteButton.onmouseleave = () => { deleteButton.style.opacity = '0.7'; deleteButton.style.color = 'var(--text)'; }; // Reverte para var(--text)
+            deleteButton.onclick = (event) => {
+                event.stopPropagation(); // Impede que o clique carregue o chat
+                // Adicionar confirmação aqui seria ideal
+                if (confirm("Tem certeza que deseja apagar este chat?")) { // Confirmação básica
+                   deleteChat(chatId);
+                   lucide.createIcons(); // Recria ícones após a exclusão
+                }
+            };
+
+            listItemContainer.appendChild(chatButton);
+            listItemContainer.appendChild(deleteButton);
+            chatListEl.appendChild(listItemContainer);
+        });
+        // Garante que os ícones de lixeira sejam renderizados
+        lucide.createIcons();
+    }
+
+    // Guarda a referência da função original ANTES de sobrescrever
+    // Assumindo que 'appendMessage' já foi definida no escopo acima
+    const originalAppendMessageFuncRef = appendMessage;
+
+    // Sobrescreve a função 'appendMessage' no escopo atual para adicionar opção de salvar
+    appendMessage = function(role, text, removeTyping = false, save = true) {
+        // Chama a função original (agora referenciada) para adicionar a mensagem à interface
+        if (typeof originalAppendMessageFuncRef === 'function') {
+             originalAppendMessageFuncRef(role, text, removeTyping);
+        } else {
+             // Fallback (mantido por segurança, mas não deveria ser necessário)
+             console.error("originalAppendMessageFuncRef não é uma função!");
+             const msg = document.createElement("div");
+             msg.className = `message ${role}`;
+             msg.textContent = text; // Usar textContent
+             chat.appendChild(msg);
+             if (removeTyping) {
+                 const typingIndicator = chat.querySelector('.typing-indicator-wrapper');
+                 if (typingIndicator) chat.removeChild(typingIndicator);
+             }
+             chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+        }
+
+        // Salva a mensagem se 'save' for true e houver um chat ativo
+        if (save) {
+            const activeChatId = getActiveChatId();
+            if (activeChatId) {
+                saveMessageToChat(activeChatId, role, text);
+                // Atualiza o título na lista se for a primeira mensagem do usuário no chat
+                const chats = getSavedChats();
+                if (role === 'user' && chats[activeChatId]?.filter(m => m.role === 'user').length === 1) {
+                    renderChatList();
+                }
+            }
+        }
+    }
+
+    // Evento para Novo Chat
+    newChatBtn?.addEventListener('click', () => {
+        const newId = generateChatId();
+        const currentChats = getSavedChats();
+        currentChats[newId] = []; // Cria entrada vazia para o novo chat
+        saveChats(currentChats);
+        loadChat(newId); // Carrega o novo chat (que estará vazio)
+        input.focus(); // Foca no input para o usuário digitar
+    });
+
+    // --- Inicialização do Histórico ---
+    function initializeChatHistory() {
+      let activeChatId = getActiveChatId();
+      const savedChats = getSavedChats();
+
+      // Verifica se o chat ativo existe nos chats salvos
+      if (!activeChatId || !savedChats[activeChatId]) {
+          // Se não há chat ativo válido, tenta encontrar o mais recente
+          const sortedChatIds = Object.keys(savedChats).sort((a, b) => {
+              const lastMsgTimeA = savedChats[a]?.[savedChats[a].length - 1]?.timestamp || parseInt(a.split('_')[1] || '0');
+              const lastMsgTimeB = savedChats[b]?.[savedChats[b].length - 1]?.timestamp || parseInt(b.split('_')[1] || '0');
+              return lastMsgTimeB - lastMsgTimeA;
+          });
+
+          if (sortedChatIds.length > 0) {
+              activeChatId = sortedChatIds[0]; // Carrega o mais recente
+          } else {
+              // Se não há chats salvos, cria um novo
+              activeChatId = generateChatId();
+              savedChats[activeChatId] = [];
+              saveChats(savedChats);
+          }
+          setActiveChatId(activeChatId);
+      }
+      // Carrega o chat ativo (seja ele existente ou recém-criado)
+      loadChat(activeChatId);
+      renderChatList(); // Renderiza a lista inicial
+    }
+
+    // --- Inicialização Final ---
+    const initialLang = localStorage.getItem('ultron-lang') || 'pt';
+    setLanguage(initialLang);
+    lucide.createIcons();
+    initializeChatHistory();
+
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Corrigir o nome do topo da sidebar
+    const nomeSalvo = localStorage.getItem("ultron-nome-usuario") || "User";
+    const tituloSidebarEl = document.querySelector(".sidebar h2");
+    if (tituloSidebarEl) tituloSidebarEl.textContent = nomeSalvo;
+
+    // Corrigir o texto do botão de idioma com base no idioma atual
+    const currentLang = localStorage.getItem('ultron-lang') || 'pt';
+    const translations = {
+      pt: "Idioma",
+      en: "Language",
+      es: "Idioma"
+    };
+    const langSpan = document.querySelector('button#languageBtn span[data-translate-key="languageBtn"]');
+    if (langSpan && translations[currentLang]) {
+      langSpan.innerText = translations[currentLang];
+    }
+
+    // Criar novo chat automaticamente ao iniciar (mantendo os anteriores)
+    const newChatId = `chat_${Date.now()}`;
+    const CHATS_KEY = 'ultron-chats';
+    const ACTIVE_CHAT_ID_KEY = 'ultron-active-chat-id';
+    const chats = JSON.parse(localStorage.getItem(CHATS_KEY) || "{}");
+    chats[newChatId] = [];
+    localStorage.setItem(CHATS_KEY, JSON.stringify(chats));
+    localStorage.setItem(ACTIVE_CHAT_ID_KEY, newChatId);
+  });
+</script>
+<script>
+  // Aplicar tema salvo imediatamente
+  const savedTheme = localStorage.getItem("ultron-theme");
+  if (savedTheme === "dark") {
+    document.documentElement.classList.add("dark");
+    document.body.classList.add("dark");
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Após a carga normal, criar um novo chat (mantendo os antigos)
+    const generateChatId = () => `chat_${Date.now()}`;
+    const chats = JSON.parse(localStorage.getItem("ultron-chats") || "{}");
+    const newChatId = generateChatId();
+    chats[newChatId] = [];
+    localStorage.setItem("ultron-chats", JSON.stringify(chats));
+    localStorage.setItem("ultron-active-chat-id", newChatId);
+  });
+</script>
+<script>
+function pularLogin() {
+  const iframe = document.getElementById("iframeLogin");
+  if (iframe) iframe.remove();
+}
+</script></body>
+</html>
