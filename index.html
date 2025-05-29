@@ -1488,12 +1488,6 @@ async function carregarConhecimento() {
   }
 }
 
-async function salvarConhecimentoFirebase(pergunta, resposta) {
-  const ref = doc(db, "ultron", "conhecimento");
-  conhecimentoUltron[pergunta] = resposta;
-  await setDoc(ref, conhecimentoUltron);
-}
-
 function responderUltron(msg) {
   const texto = msg.trim().toLowerCase();
   if (conhecimentoUltron[texto]) {
@@ -1505,7 +1499,9 @@ function responderUltron(msg) {
   if (match) {
     const pergunta = match[1].trim().toLowerCase();
     const resposta = match[2].trim();
-    salvarConhecimentoFirebase(pergunta, resposta);
+    conhecimentoUltron[pergunta] = resposta;
+    const ref = doc(db, "ultron", "conhecimento");
+    setDoc(ref, conhecimentoUltron);
     return `Entendido! Quando você disser "${pergunta}", responderei "${resposta}".`;
   }
 
